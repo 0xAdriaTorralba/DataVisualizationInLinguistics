@@ -26,12 +26,13 @@ treeJSON = d3.json(dataset, function (error, json) {
 
     /* Colours
     * */
-    var colourEdgeNeutral = "#000000", colourEdgePositive = "#77dd77", colourEdgeNegative = "#ff6961";
     var colourBothStances = "#FFA500", colourPositiveStance = "#77dd77", colourNegativeStance = "#ff6961",
         colourNeutralStance = "#2b2727";
+
     var colourToxicity0 = "#f7f7f7", colourToxicity1 = "#cccccc", colourToxicity2 = "#737373",
         colourToxicity3 = "#000000", colourNewsArticle = "lightsteelblue", colourCollapsed = "Blue";
 
+    var colorFeature = ["#12CB3C", "#23AC79", "#ffbaba", "#ea7575", "#e02f2f", "#ff0000", "#911212", "#3a0707"];
     /*
     Target objects
     * */
@@ -456,164 +457,9 @@ treeJSON = d3.json(dataset, function (error, json) {
 
     /*END section*/
 
-    /* SECTION legend*/
-    var targetLegend = d3.select("#target-legend-container");
-
-    function displayTargetLegend() {
-        // Handmade legend
-        targetLegend.append("image")
-            .attr("x", 10)
-            .attr("y", 0)
-            .attr("height", 25)
-            .attr("width", 25)
-            .attr("href", pathTargets + "icons/" + objTargetGroup.fileName);
-        targetLegend.append("text")
-            .attr("x", 50).attr("y", 10)
-            .text("Target group")
-            .style("font-size", "15px")
-            .attr("alignment-baseline", "middle")
-
-        targetLegend.append("image")
-            .attr("x", 10)
-            .attr("y", 25)
-            .attr("height", 25)
-            .attr("width", 25)
-            .attr("href", pathTargets + "icons/" + objTargetPerson.fileName);
-        targetLegend.append("text")
-            .attr("x", 50).attr("y", 40)
-            .text("Target person")
-            .style("font-size", "15px")
-            .attr("alignment-baseline", "middle")
-
-        targetLegend.append("image")
-            .attr("x", 10)
-            .attr("y", 55)
-            .attr("height", 25)
-            .attr("width", 25)
-            .attr("href", pathTargets + "icons/" + objTargetStereotype.fileName);
-        targetLegend.append("text")
-            .attr("x", 50).attr("y", 70)
-            .text("Stereotype")
-            .style("font-size", "15px")
-            .attr("alignment-baseline", "middle")
-    }
-
-    displayTargetLegend();
-
-    var featureLegend = d3.select("#feature-legend-container");
-
-    // create a list of keys
-    var keys = ["Argumentation", "Constructiveness", "Sarcasm", "Mockery", "Intolerance", "Improper language", "Insult", "Aggressiveness"];
-    var colorFeature = ["#12CB3C", "#23AC79", "#ffbaba", "#ea7575", "#e02f2f", "#ff0000", "#911212", "#3a0707"];
-
-    // Add one dot in the legend for each name.
-    featureLegend.selectAll("mydots")
-        .data(keys)
-        .enter()
-        .append("circle")
-        .attr("cx", 20)
-        .attr("cy", function (d, i) {
-            return 20 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("r", 7)
-        .style("fill", function (d, i) {
-            return colorFeature[i]
-        });
-
-    featureLegend.selectAll("mylabels")
-        .data(keys)
-        .enter()
-        .append("text")
-        .attr("x", 40)
-        .attr("y", function (d, i) {
-            return 20 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .text(function (d) {
-            return d
-        })
-        .attr("text-anchor", "left")
-        .style("alignment-baseline", "middle");
-
-
-    var nodeLegend = d3.select("#toxicity-legend-container");
-
-    // create a list of keys
-    var keysNode = ["Not toxic", "Mildly toxic", "Toxic", "Very toxic", "News Article", "Node collapsed with", " just one direct son"];
-    var colorNode = [colourToxicity0, colourToxicity1, colourToxicity2, colourToxicity3, colourNewsArticle, colourCollapsed, "none"];
-
 
     var svgGroup = svg.append("g");
 
-    // Add one dot in the legend for each name.
-    nodeLegend.selectAll("mydotsToxicity")
-        .data(keysNode)
-        .enter()
-        .append("circle")
-        .attr("cx", 20)
-        .attr("cy", function (d, i) {
-            return 20 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("r", 7)
-        .style("stroke-width", "0px")
-        .style("fill", function (d, i) {
-            return colorNode[i]
-        });
-
-    nodeLegend.selectAll("mylabelsToxicity")
-        .data(keysNode)
-        .enter()
-        .append("text")
-        .attr("x", 40)
-        .attr("y", function (d, i) {
-            return 20 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .text(function (d) {
-            return d
-        })
-        .attr("text-anchor", "left")
-        .attr("white-space", "normal")
-        .attr("overflow", "scroll")
-        .style("alignment-baseline", "middle");
-
-
-    var edgeLegend = d3.select("#edge-legend-container");
-
-    // create a list of keys
-    var keysEdge = ["Neutral", "Positive stance", "Negative stance"];
-    var colorEdge = [colourEdgeNeutral, colourEdgePositive, colourEdgeNegative];
-
-    // Add one dot in the legend for each name.
-    edgeLegend.selectAll("mylinesEdges")
-        .data(keysEdge)
-        .enter()
-        .append("rect")
-        .attr("x", 10)
-        .attr("y", function (d, i) {
-            return 15 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("width", "20px")
-        .attr("height", "10px")
-        .style("fill", function (d, i) {
-            return colorEdge[i]
-        });
-
-    edgeLegend.selectAll("mylabelsEdge")
-        .data(keysEdge)
-        .enter()
-        .append("text")
-        .attr("x", 40)
-        .attr("y", function (d, i) {
-            return 20 + i * 25
-        }) // 100 is where the first dot appears. 25 is the distance between dots
-        .text(function (d) {
-            return d
-        })
-        .attr("text-anchor", "left")
-        .attr("white-space", "normal")
-        .attr("overflow", "scroll")
-        .style("alignment-baseline", "middle");
-
-    /* END SECTION legend*/
 
     /*SECTION statistic background*/
 
