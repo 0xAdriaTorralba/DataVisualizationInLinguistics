@@ -6,11 +6,13 @@ treeJSON = d3.json(dataset, function (error, json) {
     Definitions
     * */
 
+    /* Size of the canvas, root element and nodes
+    * */
     var width = $(document).width(),
         height = $(document).height(),
         root, rootName = "News Article", nodes;
 
-    var optimalK;
+    var optimalK; //Computed optimal distance between nodes
 
     var ringHeight = 55, ringWidth = 55, ringX = -10, ringY = -10;
     var radiusFactor = 2; // The factor by which we multiply the radius of a node when collapsed with more than 2 children
@@ -32,7 +34,10 @@ treeJSON = d3.json(dataset, function (error, json) {
     var colourToxicity0 = "#f7f7f7", colourToxicity1 = "#cccccc", colourToxicity2 = "#737373",
         colourToxicity3 = "#000000", colourNewsArticle = "lightsteelblue", colourCollapsed = "Blue";
 
-    var colorFeature = ["#12CB3C", "#23AC79", "#ffbaba", "#ea7575", "#e02f2f", "#ff0000", "#911212", "#3a0707"];
+    var colorFeature = ["#a1d99b", "#31a354",
+        "#fee5d9", "#fcbba1", "#fc9272",
+        "#fb6a4a", "#de2d26", "#a50f15"];
+
     /*
     Target objects
     * */
@@ -223,6 +228,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("argumentation"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos(Math.PI/2),
+            yDot: Math.sin(Math.PI/2),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Argumentation.png"
@@ -233,6 +240,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("constructiveness"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos(Math.PI/4),
+            yDot: Math.sin(Math.PI/4),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Constructiveness.png"
@@ -243,6 +252,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("sarcasm"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos(0),
+            yDot: Math.sin(0),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Sarcasm.png"
@@ -253,6 +264,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("mockery"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos((7 * Math.PI)/4),
+            yDot: Math.sin((7 * Math.PI)/4),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Mockery.png"
@@ -263,6 +276,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("intolerance"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos((3 * Math.PI)/2),
+            yDot: Math.sin((3 * Math.PI)/2),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Intolerance.png"
@@ -273,6 +288,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("improper_language"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos((5 * Math.PI)/4),
+            yDot: Math.sin((5 * Math.PI)/4),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Improper.png"
@@ -283,6 +300,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledSettings.indexOf("insult"),
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos( Math.PI),
+            yDot: Math.sin( Math.PI),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Insult.png"
@@ -293,6 +312,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             id: "featAggressiveness",
             x: cheeseX,
             y: cheeseY,
+            xDot: Math.cos((3 * Math.PI)/4),
+            yDot: Math.sin((3 * Math.PI)/4),
             height: cheeseHeight,
             width: cheeseWidth,
             fileName: "Aggressiveness.png"
@@ -708,13 +729,16 @@ treeJSON = d3.json(dataset, function (error, json) {
         var features = [objFeatArgumentation, objFeatConstructiveness, objFeatSarcasm, objFeatMockery, objFeatIntolerance, objFeatImproper, objFeatInsult, objFeatAggressiveness];
         var listOpacity;
 
+        console.log("dots in radial way?")
         for (var i = 0; i < 8; i++) {
             if (cbFeatureEnabled[i] > -1) {
                 nodeEnter.append("circle")
                     .attr('class', features[i].class)
                     .attr('id', features[i].id)
                     .attr("r", "4.5")
-                    .attr("transform", "translate(" + (35 + i * 10) + "," + 0 + ")")
+                    .attr("transform", function (d) {
+                        return "translate(" + ((d.radius + 5) * features[i].xDot ) + "," + ((d.radius+10) * features[i].yDot) + ")";
+                    })
                     .attr("fill", colorFeature[i])
                     .style("stroke", "black")
                     .style("stroke-width", "0.5px")
