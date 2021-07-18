@@ -1632,7 +1632,8 @@ treeJSON = d3.json(dataset, function (error, json) {
                    If no children, new radius = 8.7
                * */
                 d.radius = 8.7;
-                if (d.children === undefined && d._children === undefined) return d.radius; //If no children, radius = 8.7
+                console.log("checking children undefined", d.children, d._children);
+                if (!d.children && !d._children) return d.radius; //If no children, radius = 8.7
 
                 var children =  d.children ?? d._children; //Assign children collapsed or not
                 children.length > 2 ? d.radius = radiusFactor * 4 * children.length
