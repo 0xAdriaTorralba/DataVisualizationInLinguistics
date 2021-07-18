@@ -96,15 +96,18 @@ treeJSON = d3.json(dataset, function (error, json) {
         .call(d3.behavior.zoom().scaleExtent([0.1, 8]).on("zoom", zoom)) //Allow zoom
         .append("g");
 
-    //Construct a new force-directed layout
+    /* Construct a new force-directed layout
+    * in the dimensions given
+    * on tick, computes one step of the simulation force layout
+    * disabling gravity makes the layout better, since we do not have invisible strings attracting nodes to the center of the screen
+    * repulsive charge to make nodes repel each other. The lower the value (i.e. the more repulsive force), the longer the edges
+    * approximated link distance, real distance depends on other factors
+   * */
     var force = d3.layout.force()
-        /* .force("r", d3.forceRadial(function(d) {
-             return d.depth * 100;
-         }))*/
         .size([width, height])
         .on("tick", tick)
         .gravity(0) //Disable gravity
-        .charge(-300) //ToDo change to inner function to separate by toxicity level
+        .charge(-300)
         .linkDistance(50); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
 
     var drag = force.drag() //Define behaviour on drag
@@ -113,7 +116,6 @@ treeJSON = d3.json(dataset, function (error, json) {
     var link = svg.selectAll("path.link"),
         node = svg.selectAll(".node")
             .sort(function (a, b) {
-                console.log("sorting after force", a, b);
                 return d3.ascending(a.toxicity_level, b.toxicity_level); //NOTE: this avoids the tree being sorted and changed when collapsing a node
             }); //Adding the links first, makes the edges appear above them
 
@@ -1497,8 +1499,11 @@ treeJSON = d3.json(dataset, function (error, json) {
             };
         }
         var total = 0, childrenList = [], totalToxic0 = 0, totalToxic1 = 0, totalToxic2 = 0, totalToxic3 = 0;
-        if (node.children) {
-            node.children.forEach(function (d) {
+
+        var children =  node.children ?? node._children;
+
+        if (children) {
+            children.forEach(function (d) {
 
                 childrenList = getDescendants(d);
                 total += childrenList.children + 1;
@@ -1509,55 +1514,10 @@ treeJSON = d3.json(dataset, function (error, json) {
                 totalToxic3 += childrenList.toxicity3;
 
                 switch (childrenList.toxicityLevel) {
-
-                    case 0:
-                        totalToxic0 += 1;
-                        break;
-
-                    case 1:
-                        totalToxic1 += 1;
-                        break;
-
-                    case 2:
-                        totalToxic2 += 1;
-                        break;
-
-                    case 3:
-                        totalToxic3 += 1;
-                        break;
-                }
-
-            })
-        }
-
-        if (node._children) {
-            node._children.forEach(function (d) {
-
-                childrenList = getDescendants(d);
-                total += childrenList.children + 1;
-
-                totalToxic0 += childrenList.toxicity0;
-                totalToxic1 += childrenList.toxicity1;
-                totalToxic2 += childrenList.toxicity2;
-                totalToxic3 += childrenList.toxicity3;
-
-                switch (childrenList.toxicityLevel) {
-
-                    case 0:
-                        totalToxic0 += 1;
-                        break;
-
-                    case 1:
-                        totalToxic1 += 1;
-                        break;
-
-                    case 2:
-                        totalToxic2 += 1;
-                        break;
-
-                    case 3:
-                        totalToxic3 += 1;
-                        break;
+                    case 0: totalToxic0 += 1; break;
+                    case 1: totalToxic1 += 1; break;
+                    case 2: totalToxic2 += 1; break;
+                    case 3: totalToxic3 += 1; break;
                 }
             })
         }
@@ -1702,22 +1662,15 @@ treeJSON = d3.json(dataset, function (error, json) {
     * */
 
     function update() {
-        nodes = flatten(root);
+        nodes = flatten(root); //get nodes as a list
         var links = d3.layout.tree().links(nodes);
 
-        optimalK = getOptimalK(nodes);
-        //console.log("Optimal k: ", optimalK);
+        optimalK = getOptimalK(nodes); // compute optimal distance between nodes
 
         root.fixed = true;
         root.x = width / 2;
         root.y = height / 2;
 
-        console.log(nodes);
-        nodes = nodes.sort(function (a, b) {
-            return d3.ascending(a.toxicity_level, b.toxicity_level); //NOTE: this avoids the tree being sorted and changed when collapsing a node
-        });
-
-        console.log(nodes);
         // Restart the force layout.
         force
             .nodes(nodes)
@@ -1748,15 +1701,10 @@ treeJSON = d3.json(dataset, function (error, json) {
                 return d.target.y;
             })
             .style("stroke", function (d) {
-                if (d.target.positive_stance && d.target.negative_stance) { //Si está a favor y en contra
-                    return colourBothStances;
-                } else if (d.target.positive_stance === 1) { //A favor
-                    return colourPositiveStance;
-                } else if (d.target.negative_stance === 1) { // En contra
-                    return colourNegativeStance;
-                } else {
-                    return colourNeutralStance;
-                }
+                if (d.target.positive_stance && d.target.negative_stance) return colourBothStances; //Both against and in favour
+                else if (d.target.positive_stance === 1) return colourPositiveStance; //In favour
+                else if (d.target.negative_stance === 1)  return colourNegativeStance; //Against
+                else return colourNeutralStance; //Neutral comment
             });
 
 
@@ -1807,21 +1755,20 @@ treeJSON = d3.json(dataset, function (error, json) {
         node.selectAll("circle").transition()
             .attr("r", function (d) {
                 /*
-                    If node has children,
-                    more than 2: new radius = 2 * #children
-                    2: new radius = 5.5
-                    1: new radius = 4.5 (as usual)
+                   If node has children,
+                   more than 2: new radius = 8 * #children
+                   2: new radius = 2 * 8.7
+                   1: new radius = 7.7
+                   If no children, new radius = 8.7
+               * */
+                d.radius = 8.7;
+                if (d.children === undefined && d._children === undefined) return d.radius; //If no children, radius = 8.7
 
-                    If no children, new radius = 4.5 (as usual)
-                * */
-                if (d._children)
-                    if (d._children.length > 2)
-                        return radiusFactor * d._children.length * 4
-                    else if (d._children.length === 2)
-                        return 8.7 * radiusFactor
-                    else
-                        return 7.7 * radiusFactor;
-                return 8.7;
+                var children =  d.children ?? d._children; //Assign children collapsed or not
+                children.length > 2 ? d.radius = radiusFactor * 4 * children.length
+                    : children.length  === 2 ? d.radius = 8.7 * radiusFactor
+                    : d.radius = 7.7 * radiusFactor;
+                return d.radius;
             })
             .style("fill", function (d) {
                 if (d._children && d._children.length === 1) return colourCollapsed;
