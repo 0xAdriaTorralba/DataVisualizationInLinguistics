@@ -11,7 +11,7 @@ function computeNodeRadius(d, edgeLength = 300) {
         0 children: new radius = 10
     * */
     d.radius = 10;
-    if (d.children === undefined && d._children === undefined) return d.radius; //If no children, radius = 10
+    if (d.children == null && d._children == null) return d.radius; //If no children, radius = 10
 
     var children =  d.children ?? d._children; //Assign children collapsed or not
 
@@ -410,6 +410,8 @@ treeJSON = d3.json(dataset, function (error, json) {
         class: "rootNode",
         id: "rootNode",
         fileName: "root.png"  };
+
+    var imgRatio = 20; //Percentage of difference between the radii of a node and its associated image
 
     var optimalK; //Computed optimal distance between nodes
 
@@ -886,6 +888,22 @@ treeJSON = d3.json(dataset, function (error, json) {
     /*END section statistic background*/
 
     /* SECTION TO DRAW TARGETS */
+
+    /**
+     * Compute the position of an associated image to be centered on the node
+     * that is a radiusPercentage smaller than it
+     * */
+    function positionImage(nodeRadius, radiusPercentage = imgRatio) {
+        return nodeRadius * (radiusPercentage / 100.0 - 1);
+    }
+
+    /**
+     * Compute the size of an associated image to be a radiusPercentage smaller than the node
+     * */
+    function sizeImage(nodeRadius, radiusPercentage = imgRatio){
+        return 2 * nodeRadius * (1 - radiusPercentage / 100.0);
+    }
+
     /**
      * Remove all the target icon or images of the given node
      * */
@@ -1159,13 +1177,21 @@ treeJSON = d3.json(dataset, function (error, json) {
         nodeEnter.append("image")
             .attr('class', objFeatGray.class)
             .attr('id', objFeatGray.id)
-            .attr("x", objFeatGray.x) //NOTE: it is always displayed at the left side!!
-            .attr("y", objFeatGray.y)
-            .attr("height", objFeatGray.height)
-            .attr("width", objFeatGray.width)
+            .attr("x", function (d) {
+                return positionImage(d.radius);
+            })
+            .attr("y", function (d) {
+                return positionImage(d.radius);
+            })
+            .attr("height", function (d) {
+                return sizeImage(d.radius);
+            })
+            .attr("width", function (d) {
+                return sizeImage(d.radius);
+            })
             .attr("href", pathFeatures + localPath + objFeatGray.fileName)
             .attr("opacity", function (d) {
-                if (d.name === rootName) return 0;
+                if (d.parent === null) return 0;
                 return 0.5;
             });
 
@@ -1181,13 +1207,21 @@ treeJSON = d3.json(dataset, function (error, json) {
                 nodeEnter.append("image")
                     .attr('class', features[i].class)
                     .attr('id', features[i].id)
-                    .attr("x", features[i].x)
-                    .attr("y", features[i].y)
-                    .attr("height", features[i].height)
-                    .attr("width", features[i].width)
+                    .attr("x", function (d) {
+                        return positionImage(d.radius);
+                    })
+                    .attr("y", function (d) {
+                        return positionImage(d.radius);
+                    })
+                    .attr("height", function (d) {
+                        return sizeImage(d.radius);
+                    })
+                    .attr("width", function (d) {
+                        return sizeImage(d.radius);
+                    })
                     .attr("href", pathFeatures + localPath + features[i].fileName)
                     .attr("opacity", function (d) {
-                        if (d.name === rootName) return 0;
+                        if (d.parent === null) return 0;
                         listOpacity = [d.argumentation, d.constructiveness, d.sarcasm, d.mockery, d.intolerance, d.improper_language, d.insult, d.aggressiveness];
                         return listOpacity[i];
                     });
@@ -1313,7 +1347,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                 selectTargetVisualization(nodeEnter); //draw the targets if necessary
                 drawFeatureDots(nodeEnter); //Always drawn on the right side
                 break;
-            case "trivial-cheese":
+            case "trivial-cheese-on-node":
                 selectTargetVisualization(nodeEnter); //draw the targets if necessary
                 drawFeatureAsCheese(nodeEnter, "trivialCheese/"); //Always drawn on the right side
                 break;
@@ -2067,7 +2101,7 @@ treeJSON = d3.json(dataset, function (error, json) {
             })
             .on("mousemove", function (d) {
                 if (d !== root) {
-                    return tooltip.style("top", (d3.event.pageY - 30) + "px").style("left", (d3.event.pageX - 440) + "px");
+                    return tooltip.style("top", (d3.event.pageY - 30) + "px").style("left", (d3.event.pageX - 480) + "px");
                 }
             })
             .on("mouseout", function () {
