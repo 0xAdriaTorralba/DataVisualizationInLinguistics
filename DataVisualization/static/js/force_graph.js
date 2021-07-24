@@ -964,10 +964,18 @@ treeJSON = d3.json(dataset, function (error, json) {
                 nodeEnter.append("image")
                     .attr('class', targets[i].class)
                     .attr('id', targets[i].id)
-                    .attr("x", targets[i].x)
-                    .attr("y", targets[i].y)
-                    .attr("height", targets[i].height)
-                    .attr("width", targets[i].width)
+                    .attr("x", function (d) {
+                        return positionImage(d.radius, 0);
+                    })
+                    .attr("y", function (d) {
+                        return positionImage(d.radius, 0);
+                    })
+                    .attr("height", function (d) {
+                        return sizeImage(d.radius, 0);
+                    })
+                    .attr("width", function (d) {
+                        return sizeImage(d.radius, 0);
+                    })
                     .attr("href", pathTargets + localPath + targets[i].fileName)
                     .attr("opacity", function (d) {
                         if (d.parent === null) return 0;
@@ -1009,7 +1017,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                     drawTargets(nodeEnter, "newOption2/")
                     break;
                 //draw as ring outside of the node
-                case "rings":
+                case "ring-on-node":
                     drawTargetRings(nodeEnter, "rings/")
                     break;
                 //draw as an icon if 1, as rings if more options checked
@@ -1164,7 +1172,6 @@ treeJSON = d3.json(dataset, function (error, json) {
         var features = [objFeatArgumentation, objFeatConstructiveness, objFeatSarcasm, objFeatMockery, objFeatIntolerance, objFeatImproper, objFeatInsult, objFeatAggressiveness];
         var listOpacity;
 
-        console.log("dots in radial way?")
         for (var i = 0; i < 8; i++) {
             if (cbFeatureEnabled[i] > -1) {
                 nodeEnter.append("circle")
