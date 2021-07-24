@@ -1130,6 +1130,24 @@ treeJSON = d3.json(dataset, function (error, json) {
     }
 
     /**
+     * Removes the toxicities of all the nodes
+     * */
+    function removeAllToxicities() {
+        d3.selectAll("#toxicity0").remove();
+        d3.selectAll("#toxicity1").remove();
+        d3.selectAll("#toxicity2").remove();
+        d3.selectAll("#toxicity3").remove();
+    }
+
+    /**
+     * Hide all images associated with the drawing of features
+     * */
+    function hideFeatureImages(){
+        removeAllFeatures();
+        removeAllToxicities();
+    }
+
+    /**
      * Delete the features of the node
      * Redraw the features of the node
      *
@@ -2217,7 +2235,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                     }
                 );
 
-                removeAllFeatures(); //Hide all features when the cb is unchecked
+                hideFeatureImages(); //Hide all features when the cb is unchecked
             }
         });
 
@@ -2322,7 +2340,7 @@ treeJSON = d3.json(dataset, function (error, json) {
        - highlight nodes and edges
        * */
         selectTargetVisualization(node);
-        checkboxFeatureMenu.checked ? selectFeatureVisualization(node) : removeAllFeatures();
+        checkboxFeatureMenu.checked ? selectFeatureVisualization(node) : hideFeatureImages();
         if(checkboxHighlightMenu.checked) checkboxOR.checked ? highlightNodesByPropertyOR(node, link) : highlightNodesByPropertyAND(node, link);
     } //END update
 
