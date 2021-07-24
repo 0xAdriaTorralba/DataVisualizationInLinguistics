@@ -597,6 +597,11 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledTargets.indexOf("target-group"),
             x: -20,
             y: -10,
+            xDot:  Math.cos(5 * Math.PI / 4),
+            yDot:  Math.sin(5 * Math.PI / 4),
+            fix: -1,
+            xOffset: -1,
+            yOffset: -1,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Group.png"
@@ -607,6 +612,11 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledTargets.indexOf("target-person"),
             x: 5,
             y: -10,
+            xDot:  Math.cos(7 * Math.PI / 4),
+            yDot:  Math.sin(7 * Math.PI / 4),
+            fix: 0,
+            xOffset: +1,
+            yOffset: 0,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Person.png"
@@ -617,6 +627,11 @@ treeJSON = d3.json(dataset, function (error, json) {
             selected: enabledTargets.indexOf("target-stereotype"),
             x: -5,
             y: +5,
+            xDot:  Math.cos(Math.PI / 2),
+            yDot:  Math.sin(Math.PI / 2),
+            fix: 0,
+            xOffset: -1,
+            yOffset: +1,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Stereotype.png"
@@ -1050,8 +1065,11 @@ treeJSON = d3.json(dataset, function (error, json) {
                 nodeEnter.append("image")
                     .attr('class', targets[i].class)
                     .attr('id', targets[i].id)
-                    .attr("x", targets[i].x)
-                    .attr("y", targets[i].y)
+                    .attr("transform", function (d) {
+                        //Translate the images to be at the border of the node in a triangle
+                        return "translate(" + ( d.radius * targets[i].xDot + targets[i].width * targets[i].fix) +
+                            "," + ( d.radius * targets[i].yDot ) + ")";
+                    })
                     .attr("height", targets[i].height)
                     .attr("width", targets[i].width)
                     .attr("href", pathTargets + localPath + targets[i].fileName)
@@ -1179,7 +1197,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                     .attr('id', features[i].id)
                     .attr("r", "4.5")
                     .attr("transform", function (d) {
-                        return "translate(" + ((d.radius + 5) * features[i].xDot ) + "," + ((d.radius+10) * features[i].yDot) + ")";
+                        return "translate(" + ((d.radius + 5) * features[i].xDot ) + "," + ((d.radius+5) * features[i].yDot) + ")";
                     })
                     .attr("fill", colorFeature[i])
                     .style("stroke", "black")
