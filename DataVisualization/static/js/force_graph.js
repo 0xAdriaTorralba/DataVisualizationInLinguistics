@@ -1,3 +1,28 @@
+
+/**
+ * Compute the radius of the node based on the number of children it has
+ * */
+function computeNodeRadius(d, edgeLength = 300) {
+    /*
+        If node has children,
+        more than 2: new radius = 16 + 3 * (#children - 2)
+        2 children: new radius = 16
+        1 child: new radius = 13
+        0 children: new radius = 10
+    * */
+    d.radius = 10;
+    if (d.children === undefined && d._children === undefined) return d.radius; //If no children, radius = 10
+
+    var children =  d.children ?? d._children; //Assign children collapsed or not
+
+    children.length > 2 ? d.radius = 16 + 3 * (children.length - 2) // more than 2 children
+        : children.length  === 2 ? d.radius = 16 //2 children
+        : d.radius = 13; //One child
+    //Avoid the root node from being so large that overlaps/hides its children
+    if(d.parent === null && d.radius > edgeLength / 2) d.radius = edgeLength / 2.0;
+    return d.radius;
+}
+
 //
 treeJSON = d3.json(dataset, function (error, json) {
     if (error) throw error;
@@ -11,6 +36,13 @@ treeJSON = d3.json(dataset, function (error, json) {
     var width = $(document).width(),
         height = $(document).height(),
         root, rootName = "News Article", nodes;
+
+    /* Icon for the root node */
+    var rootPath = pr;
+    var objRoot = {
+        class: "rootNode",
+        id: "rootNode",
+        fileName: "root.png"  };
 
     var optimalK; //Computed optimal distance between nodes
 
@@ -946,6 +978,23 @@ treeJSON = d3.json(dataset, function (error, json) {
         }
     }
 
+    /**
+     * Draw an icon for the root node
+     * */
+    function visualiseRootIcon(node){
+        //Filter the nodes and append an icon just for the root node
+        node.filter(function (d) {
+            return d.parent === null;
+        }).append("image")
+            .attr('class', objRoot.class)
+            .attr('id', objRoot.id)
+            .attr("x", root.x - root.radius)
+            .attr("y", root.y - root.radius)
+            .attr("height", root.radius * 2)
+            .attr("width", root.radius * 2)
+            .attr("href", rootPath + objRoot.fileName)
+            .attr("opacity", 1);
+    }
 
     /*SECTION highlighting */
     function highlightByPropertyOR(node, link) {
@@ -1624,22 +1673,7 @@ treeJSON = d3.json(dataset, function (error, json) {
         // Update radius and colour of a node when collapsing it
         node.selectAll("circle").transition()
             .attr("r", function (d) {
-                /*
-                   If node has children,
-                   more than 2: new radius = 8 * #children
-                   2: new radius = 2 * 8.7
-                   1: new radius = 7.7
-                   If no children, new radius = 8.7
-               * */
-                d.radius = 8.7;
-                console.log("checking children undefined", d.children, d._children);
-                if (!d.children && !d._children) return d.radius; //If no children, radius = 8.7
-
-                var children =  d.children ?? d._children; //Assign children collapsed or not
-                children.length > 2 ? d.radius = radiusFactor * 4 * children.length
-                    : children.length  === 2 ? d.radius = 8.7 * radiusFactor
-                    : d.radius = 7.7 * radiusFactor;
-                return d.radius;
+                return computeNodeRadius(d);
             })
             .style("fill", function (d) {
                 if (d._children && d._children.length === 1) return colourCollapsed;
@@ -1657,6 +1691,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                 }
             })
             .style("z-index", 3);
+        // visualiseRootIcon(node); //Draw an icon for the root node
 
 
         //Highlight nodes if necessary NOTE: it needs to be after the definition of the link
