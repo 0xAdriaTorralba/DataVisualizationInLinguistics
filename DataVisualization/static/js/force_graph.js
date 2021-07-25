@@ -620,7 +620,12 @@ treeJSON = d3.json(dataset, function (error, json) {
         .size([width, height])
         .on("tick", tick)
         .gravity(0) //Disable gravity
-        .charge(-300)
+        //.charge(-300)
+        .charge(function (d, i) {
+            var charge = - computeNodeRadius(d) * 50;
+            console.log("datum and index",d,i, "returning: ", charge);
+            return charge;
+        })
         .linkDistance(50); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
 
     var drag = force.drag() //Define behaviour on drag
@@ -2661,6 +2666,7 @@ treeJSON = d3.json(dataset, function (error, json) {
     root = json;
     update();
 
+    console.log("root number of children: ",root.children);
     //Try to center and zoom to fit the first initialization
     var box = computeDimensions(nodes);
     console.log("box", box);
