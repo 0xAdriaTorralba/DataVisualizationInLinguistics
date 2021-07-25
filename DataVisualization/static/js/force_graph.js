@@ -602,6 +602,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             fix: -1,
             xOffset: -1,
             yOffset: -1,
+            xInsideOffset: -0.9,
+            yInsideOffset: -0.8,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Group.png"
@@ -617,6 +619,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             fix: 0,
             xOffset: +1,
             yOffset: 0,
+            xInsideOffset: -0.5,
+            yInsideOffset: 0,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Person.png"
@@ -632,6 +636,8 @@ treeJSON = d3.json(dataset, function (error, json) {
             fix: 0,
             xOffset: -1,
             yOffset: +1,
+            xInsideOffset: 0,
+            yInsideOffset: -0.8,
             height: targetIconHeight,
             width: targetIconWidth,
             fileName: "Stereotype.png"
@@ -1100,10 +1106,18 @@ treeJSON = d3.json(dataset, function (error, json) {
                 nodeEnter.append("image")
                     .attr('class', targets[i].class)
                     .attr('id', targets[i].id)
-                    .attr("x", -8.0)
-                    .attr("y", targets[i].y)
-                    .attr("height", targets[i].height)
-                    .attr("width", targets[i].width)
+                    .attr("x", function (d) {
+                        return d.radius * targets[i].xInsideOffset;
+                    })
+                    .attr("y", function (d) {
+                        return d.radius * targets[i].yInsideOffset;
+                    })
+                    .attr("height", function (d) {
+                        return sizeImage(d.radius)/2.0;
+                    })
+                    .attr("width", function (d) {
+                        return sizeImage(d.radius)/2.0;
+                    })
                     .attr("href", pathTargets + localPath + targets[i].fileName)
                     .attr("opacity", function (d) {
                         if (d.parent === null) return 0;
