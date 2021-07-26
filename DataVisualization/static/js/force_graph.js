@@ -56,11 +56,11 @@ function zoomToFitGraph(minX, minY, maxX, maxY,
     /* Note our coordinate system:
     *
     *
-    *                     | X negative
+    *                     | Y negative
     *                     |
-    * Y negative <--------|-------> Y positive
+    * X negative <--------|-------> X positive
     *                     |
-    *                     | X positive
+    *                     | Y positive
     * Due to the D3 algorithm we are expecting: minX = - maxX
     * and due to the assignment of the root positions: minY = 0
     * */
@@ -75,18 +75,18 @@ function zoomToFitGraph(minX, minY, maxX, maxY,
     var newX = canvasWidth/2.0,
         newY = canvasHeight/2.0;
 
-    if(canvasWidth/boxWidth < canvasHeight/boxHeight) {
+/*    if(canvasWidth/boxWidth < canvasHeight/boxHeight) {
         newY -= midX * scale;
-        newX -= midY * scale;
+        //newX -= midY * scale;
     }
-    else newX -= midY * scale;
+    else newX -= midY * scale;*/
 
     //For nodes wider than tall, we need to displace them to the middle of the graph
-    if(newY < boxHeight*scale && boxHeight*scale < canvasHeight) newY =  canvasHeight / 2.0;
+    //if(newY < boxHeight*scale && boxHeight*scale < canvasHeight) newY =  canvasHeight / 2.0;
 
     d3.select('g').transition()
         .duration(duration)
-        .attr("transform", "translate(" + (newX + root.radius*scale) + "," + newY + ")scale(" + scale + ")");
+        .attr("transform", "translate(" + newX + "," + newY + ")scale(" + scale + ")");
 
     return {initialZoom: scale,
         initialY: newX,
@@ -527,6 +527,7 @@ treeJSON = d3.json(dataset, function (error, json) {
         var newY = initialY + (movement[0]-50);
         svgGroup.attr("transform", "translate(" + [newY, newX] + ")scale(" + newScale + ")");
         console.log("translate event:  ${d3.event.translate} and scale event: ${d3.event.scale}");
+        console.log("translate event:  ", d3.event.translate , " and scale event: ", d3.event.scale);
     }
 
 
@@ -620,10 +621,8 @@ treeJSON = d3.json(dataset, function (error, json) {
         .size([width, height])
         .on("tick", tick)
         .gravity(0) //Disable gravity
-        //.charge(-300)
         .charge(function (d, i) {
             var charge = - computeNodeRadius(d) * 50;
-            console.log("datum and index",d,i, "returning: ", charge);
             return charge;
         })
         .linkDistance(50); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
