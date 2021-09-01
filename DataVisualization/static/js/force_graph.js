@@ -1,3 +1,5 @@
+//Graph
+const canvasHeight = 900, canvasWidth = 2200; //Dimensions of our canvas (grayish area)
 
 /**
  * Compute the radius of the node based on the number of children it has
@@ -13,7 +15,7 @@ function computeNodeRadius(d, edgeLength = 300) {
     d.radius = 10;
     if (d.children == null && d._children == null) return d.radius; //If no children, radius = 10
 
-    var children =  d.children ?? d._children; //Assign children collapsed or not
+    const children =  d.children ?? d._children; //Assign children collapsed or not
 
     children.length > 2 ? d.radius = 16 + 3 * (children.length - 2) // more than 2 children
         : children.length  === 2 ? d.radius = 16 //2 children
@@ -475,7 +477,6 @@ treeJSON = d3.json(dataset, function (error, json) {
         height = $(document).height(),
         root, rootName = "News Article", nodes;
 
-    var canvasHeight = 900, canvasWidth = 2200; //Dimensions of our canvas (grayish area)
     var initialZoom, initialX, initialY; //Initial zoom and central coordinates of the first visualization of the graph
 
     /* Icon for the root node */
@@ -544,7 +545,7 @@ treeJSON = d3.json(dataset, function (error, json) {
     var colorFeature = ["#a1d99b", "#31a354",
         "#fee5d9", "#fcbba1", "#fc9272",
         "#fb6a4a", "#de2d26", "#a50f15"];
-  
+
     /*
     Targets: size, position, local path, objects to draw the target as ring
     * */
@@ -618,24 +619,25 @@ treeJSON = d3.json(dataset, function (error, json) {
     * repulsive charge to make nodes repel each other. The lower the value (i.e. the more repulsive force), the longer the edges
     * approximated link distance, real distance depends on other factors
    * */
-    var force = d3.layout.force()
-        .size([width, height])
+    let force = d3.layout.force()
+        .size([canvasWidth, canvasHeight])
         .on("tick", tick)
         .gravity(0) //Disable gravity
-        .charge(function (d, i) {
-            var charge = - computeNodeRadius(d) * 50;
+        /*.charge(function (d, i) {
+            let charge = - computeNodeRadius(d) * 50;
+            console.log("Charge: ", d, d.children, d._children, charge);
             return charge;
-        })
-        .linkDistance(50); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
+        })*/
+        .friction(0.95)
+        .alpha(0.1)
+        .charge(-300)
+        .linkDistance(300); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
 
     var drag = force.drag() //Define behaviour on drag
         .on("dragstart", dragstart);
 
     var link = svg.selectAll("path.link"),
-        node = svg.selectAll(".node")
-            .sort(function (a, b) {
-                return d3.ascending(a.toxicity_level, b.toxicity_level); //NOTE: this avoids the tree being sorted and changed when collapsing a node
-            }); //Adding the links first, makes the edges appear above them
+        node = svg.selectAll(".node");
 
     // Hover rectangle in which the information of a node is displayed
     var tooltip = d3.select("#tree-container")
@@ -2245,10 +2247,30 @@ treeJSON = d3.json(dataset, function (error, json) {
         tooltipText += "<br>" + d.coment;
     }
 
+    function setCircularPositions(node, angle){
+        //console.log("Nodes: ", nodes);
+        console.log("Node: ", node, angle)
+        if (!node.children && !node._children) {
+            node.x = canvasWidth / 2.0 + node.depth * Math.cos((node.parent.children?.length || node.parent._children?.length ) * angle);
+            node.y = canvasHeight / 2.0 + node.depth * Math.sin((node.parent.children?.length || node.parent._children?.length ) * angle);
+        }
+
+        let children =  node.children ?? node._children;
+
+        if (children) {
+            children.forEach(function (d) {
+                console.log("Quantity of children: ", (getStatisticValues(d).children || 1));
+                let angle = 2 * Math.PI / (getStatisticValues(d).children || 1);
+                setCircularPositions(d, angle);
+                d.x = canvasWidth / 2.0 + d.depth * Math.cos((d.parent.children?.length || d.parent._children?.length ) * angle);
+                d.y = canvasHeight / 2.0 + d.depth * Math.sin((d.parent.children?.length || d.parent._children?.length ) * angle);
+            })
+        }
+    }
+
     /*
     Functions
     * */
-
     function update() {
         nodes = flatten(root); //get nodes as a list
         var links = d3.layout.tree().links(nodes);
@@ -2256,14 +2278,20 @@ treeJSON = d3.json(dataset, function (error, json) {
         optimalK = getOptimalK(nodes); // compute optimal distance between nodes
 
         root.fixed = true;
-        root.x = width / 2;
-        root.y = height / 2;
+        root.x = canvasWidth / 2;
+        root.y = canvasHeight / 2;
+
+        console.log("Root node", root)
+
+        //ToDo position nodes radially
 
         // Restart the force layout.
         force
             .nodes(nodes)
-            .links(links)
-            .start();
+            .links(links);
+
+        setCircularPositions(root);
+        force.start();
 
         // Update the links…
         link = link.data(links, function (d) {
