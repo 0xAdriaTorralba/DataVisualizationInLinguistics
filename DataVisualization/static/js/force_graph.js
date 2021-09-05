@@ -1,5 +1,6 @@
 //Graph
 const canvasHeight = 900, canvasWidth = 2200; //Dimensions of our canvas (grayish area)
+const canvasFactor = 10;
 
 /**
  * Compute the radius of the node based on the number of children it has
@@ -38,7 +39,7 @@ function computeDimensions(nodes){
     *                     | Y positive
     * And note we need to take into account the radius of the node
     * */
-    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for(const n of nodes){
         if((n.x - n.radius) < minX) minX = n.x - n.radius;
         if((n.y - n.radius) < minY) minY = n.y - n.radius;
@@ -53,7 +54,7 @@ function computeDimensions(nodes){
  * */
 function zoomToFitGraph(minX, minY, maxX, maxY,
                         root,
-                        canvasHeight = 900, canvasWidth = 2200,
+                        canvasHeight = 900 * canvasFactor, canvasWidth = 2200 * canvasFactor,
                         duration = 750) {
     /* Note our coordinate system:
     *
@@ -620,18 +621,20 @@ treeJSON = d3.json(dataset, function (error, json) {
     * approximated link distance, real distance depends on other factors
    * */
     let force = d3.layout.force()
-        .size([canvasWidth, canvasHeight])
+        .size([canvasWidth*canvasFactor, canvasHeight*canvasFactor])
         .on("tick", tick)
-        .gravity(0) //Disable gravity
-        /*.charge(function (d, i) {
-            let charge = - computeNodeRadius(d) * 50;
-            console.log("Charge: ", d, d.children, d._children, charge);
-            return charge;
-        })*/
-        .friction(0.95)
-        .alpha(0.1)
+        //.friction(0.95)
+        .linkDistance(function(d){
+            let length = 300 - d.source.depth * 10;
+            //console.log("depth", d.source.depth, "linkDistance: ", length, d)
+            return length > 80 ? length : 80;
+        })
         .charge(-300)
-        .linkDistance(300); //Distance in pixels that we want the connected nodes (edges) to have. NOTE: it is not exact
+        /*.linkDistance(50)
+        .charge(-50)*/
+        .gravity(0) //Disable gravity
+        //.alpha(0.1)
+        ;
 
     var drag = force.drag() //Define behaviour on drag
         .on("dragstart", dragstart);
@@ -668,7 +671,7 @@ treeJSON = d3.json(dataset, function (error, json) {
     //Check the values of the checkboxes and do something
     //Draw targets
     var checkboxesTargets = [document.getElementById("target-group"), document.getElementById("target-person"), document.getElementById("target-stereotype")];
-    console.log(checkboxesTargets);
+    //console.log(checkboxesTargets);
     let enabledTargets = []; //Variable which contains the string of the enabled options to display targets
 
     // Select all checkboxes with the name 'cbFeatures' using querySelectorAll.
@@ -2259,11 +2262,12 @@ treeJSON = d3.json(dataset, function (error, json) {
 
         if (children) {
             children.forEach(function (d) {
-                console.log("Quantity of children: ", (getStatisticValues(d).children || 1));
+                //console.log("Quantity of children: ", (getStatisticValues(d).children || 1));
                 let angle = 2 * Math.PI / (getStatisticValues(d).children || 1);
                 setCircularPositions(d, angle);
                 d.x = canvasWidth / 2.0 + d.depth * Math.cos((d.parent.children?.length || d.parent._children?.length ) * angle);
                 d.y = canvasHeight / 2.0 + d.depth * Math.sin((d.parent.children?.length || d.parent._children?.length ) * angle);
+                console.log("Node: ", d, angle)
             })
         }
     }
@@ -2280,17 +2284,16 @@ treeJSON = d3.json(dataset, function (error, json) {
         root.fixed = true;
         root.x = canvasWidth / 2;
         root.y = canvasHeight / 2;
-
         console.log("Root node", root)
-
-        //ToDo position nodes radially
 
         // Restart the force layout.
         force
             .nodes(nodes)
             .links(links);
 
-        setCircularPositions(root);
+        //ToDo position nodes radially
+        //console.log("Before setting circular positions:")
+        //setCircularPositions(root, 0);
         force.start();
 
         // Update the links…
@@ -2352,7 +2355,7 @@ treeJSON = d3.json(dataset, function (error, json) {
                 }
             })
             .on("mousemove", function (d) {
-                console.log("positions of node: ", d.name ,d.x, d.y);
+                //console.log("positions of node: ", d.name ,d.x, d.y);
 ;                if (d !== root) {
                     return tooltip.style("top", (d3.event.pageY - 30) + "px").style("left", (d3.event.pageX - 480) + "px");
                 }
@@ -2697,11 +2700,11 @@ treeJSON = d3.json(dataset, function (error, json) {
     root = json;
     update();
 
-    console.log("root number of children: ",root.children);
+    //console.log("root number of children: ",root.children);
     //Try to center and zoom to fit the first initialization
-    var box = computeDimensions(nodes);
+    let box = computeDimensions(nodes);
     console.log("box", box);
-    var initialSight = zoomToFitGraph(box.minX, box.minY, box.maxX, box.maxY, root);
+    let initialSight = zoomToFitGraph(box.minX, box.minY, box.maxX, box.maxY, root);
     console.log("initial values: ", initialSight);
     initialZoom = initialSight.initialZoom;
     initialX = initialSight.initialX;
